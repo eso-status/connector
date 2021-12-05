@@ -1,0 +1,9 @@
+.idea
+node_modules
+src
+.eslintrc.js
+.gitignore
+.npmignore
+nodemon.json
+package-lock.json
+tsconfig.json

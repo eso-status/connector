@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "declaration": true,
+    "outDir": "./",
+    "strict": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "lib": [
+      "ES2020"
+    ]
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
+}
