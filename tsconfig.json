@@ -8,7 +8,8 @@
     "suppressImplicitAnyIndexErrors": true,
     "lib": [
       "ES2020"
-    ]
+    ],
+    "skipLibCheck": true,
   },
   "include": ["src"],
   "exclude": ["node_modules"]
