@@ -1,6 +1,6 @@
 {
   "name": "@eso-status/connector",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Connector for eso-status api",
   "main": "index.js",
   "types": "index.d.ts",
@@ -34,18 +34,18 @@
   },
   "homepage": "https://github.com/eso-status/connector#readme",
   "devDependencies": {
-    "@eso-status/types": "1.0.1",
-    "@typescript-eslint/eslint-plugin": "5.25.0",
-    "@typescript-eslint/parser": "5.25.0",
-    "@typescript-eslint/typescript-estree": "5.25.0",
-    "eslint": "8.15.0",
+    "@eso-status/types": "1.0.2",
+    "@typescript-eslint/eslint-plugin": "5.33.1",
+    "@typescript-eslint/parser": "5.33.1",
+    "@typescript-eslint/typescript-estree": "5.33.1",
+    "eslint": "8.22.0",
     "eslint-config-airbnb-base": "15.0.0",
     "eslint-plugin-import": "2.26.0",
-    "nodemon": "2.0.16",
-    "typescript": "4.6.4"
+    "nodemon": "2.0.19",
+    "typescript": "4.7.4"
   },
   "dependencies": {
-    "@types/node": "17.0.34",
+    "@types/node": "18.7.8",
     "axios": "0.27.2",
     "socket.io-client": "4.5.1"
   }
