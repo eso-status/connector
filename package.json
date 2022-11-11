@@ -1,10 +1,11 @@
 {
   "name": "@eso-status/connector",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Connector for eso-status api",
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
+    "post-install": "cp pre-commit .git/hooks/ && chmod +x .git/hooks/pre-commit && echo 'hook copied'",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "build": "rm -f index.js && rm -f index.d.ts && tsc",
@@ -34,19 +35,19 @@
   },
   "homepage": "https://github.com/eso-status/connector#readme",
   "devDependencies": {
-    "@eso-status/types": "1.0.2",
-    "@typescript-eslint/eslint-plugin": "5.33.1",
-    "@typescript-eslint/parser": "5.33.1",
-    "@typescript-eslint/typescript-estree": "5.33.1",
-    "eslint": "8.22.0",
+    "@eso-status/types": "1.0.5",
+    "@typescript-eslint/eslint-plugin": "5.42.1",
+    "@typescript-eslint/parser": "5.42.1",
+    "@typescript-eslint/typescript-estree": "5.42.1",
+    "eslint": "8.27.0",
     "eslint-config-airbnb-base": "15.0.0",
     "eslint-plugin-import": "2.26.0",
-    "nodemon": "2.0.19",
-    "typescript": "4.7.4"
+    "nodemon": "2.0.20",
+    "typescript": "4.8.4"
   },
   "dependencies": {
-    "@types/node": "18.7.8",
-    "axios": "0.27.2",
-    "socket.io-client": "4.5.1"
+    "@types/node": "18.11.9",
+    "axios": "1.1.3",
+    "socket.io-client": "4.5.3"
   }
 }
