@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from 'axios';
+import { AxiosResponse } from 'axios';
 import * as EventEmitter from 'events';
 import { io } from 'socket.io-client';
 import {
@@ -6,6 +6,8 @@ import {
   EsoStatus,
   MaintenanceEsoStatus,
 } from '@eso-status/types';
+
+const axios = require('axios');
 
 /**
  * Event declaration
