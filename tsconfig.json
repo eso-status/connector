@@ -1,16 +1,22 @@
 {
   "compilerOptions": {
-    "target": "es5",
     "module": "commonjs",
     "declaration": true,
+    "removeComments": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2021",
+    "sourceMap": true,
     "outDir": "./",
-    "strict": true,
-    "suppressImplicitAnyIndexErrors": true,
-    "lib": [
-      "ES2020"
-    ],
+    "baseUrl": "./src",
+    "incremental": true,
     "skipLibCheck": true,
-  },
-  "include": ["src"],
-  "exclude": ["node_modules"]
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "forceConsistentCasingInFileNames": false,
+    "noFallthroughCasesInSwitch": false,
+    "allowJs": true
+  }
 }
