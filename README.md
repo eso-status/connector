@@ -79,3 +79,4 @@ EsoStatusConnector
 | Web crown store     | service_store_crown    |
 | In game crown store | service_store_eso      |
 | Account system      | service_system_account |
+
