@@ -12,10 +12,14 @@ import { EsoStatusConnector } from '../src';
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-var-requires
 const axios = require('axios');
 
-describe('should index.ts works', () => {
-  let serverSocket: Server;
-  let clientSocket: Socket;
+let serverSocket: Server;
+let clientSocket: Socket;
 
+const mockClient = (): void => {
+  jest.spyOn(io, 'connect').mockImplementation((): Socket => clientSocket);
+};
+
+describe('should index.ts works', () => {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const get: jest.SpyInstance<Promise<AxiosResponse>> = jest.spyOn(
     axios,
@@ -160,9 +164,7 @@ describe('should index.ts works', () => {
   it('should maintenancePlanned event received', async (): Promise<void> => {
     await new Promise<void>((resolve): void => {
       clientSocket.on('connect', (): void => {
-        jest
-          .spyOn(io, 'connect')
-          .mockImplementation((): Socket => clientSocket);
+        mockClient();
 
         const maintenanceEsoStatus: MaintenanceEsoStatus = {
           raw: {
@@ -227,9 +229,7 @@ describe('should index.ts works', () => {
   it('should maintenanceRemoved event received', async (): Promise<void> => {
     await new Promise<void>((resolve): void => {
       clientSocket.on('connect', (): void => {
-        jest
-          .spyOn(io, 'connect')
-          .mockImplementation((): Socket => clientSocket);
+        mockClient();
 
         const maintenanceRemoved: Slug = 'server_xbox_eu';
 
@@ -252,9 +252,7 @@ describe('should index.ts works', () => {
   it('should statusUpdate event received', async (): Promise<void> => {
     await new Promise<void>((resolve): void => {
       clientSocket.on('connect', (): void => {
-        jest
-          .spyOn(io, 'connect')
-          .mockImplementation((): Socket => clientSocket);
+        mockClient();
 
         const statusUpdate: EsoStatus = {
           slug: 'server_xbox_na',
@@ -295,37 +293,29 @@ describe('should index.ts works', () => {
   it('should disconnect event received', async (): Promise<void> => {
     await new Promise<void>((resolve): void => {
       clientSocket.on('connect', (): void => {
-        jest
-          .spyOn(io, 'connect')
-          .mockImplementation((): Socket => clientSocket);
+        mockClient();
 
-        EsoStatusConnector.listen().on('disconnect', (): void => {
-          // eslint-disable-next-line jest/no-conditional-expect
-          expect(true).toStrictEqual(true);
-          resolve();
-        });
+        EsoStatusConnector.listen().on('disconnect', resolve);
 
         serverSocket.close();
       });
     });
+
+    expect(true).toStrictEqual(true);
   });
 
   it('should reconnect event received', async (): Promise<void> => {
     await new Promise<void>((resolve): void => {
       clientSocket.on('connect', (): void => {
-        jest
-          .spyOn(io, 'connect')
-          .mockImplementation((): Socket => clientSocket);
+        mockClient();
 
-        EsoStatusConnector.listen().on('reconnect', (): void => {
-          // eslint-disable-next-line jest/no-conditional-expect
-          expect(true).toStrictEqual(true);
-          resolve();
-        });
+        EsoStatusConnector.listen().on('reconnect', resolve);
 
         serverSocket.close();
         serverSocket = new Server(3000);
       });
     });
+
+    expect(true).toStrictEqual(true);
   });
 });
