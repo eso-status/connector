@@ -169,6 +169,7 @@ export class EsoStatusConnector {
         `Bad response ${axiosResult?.status} (${axiosResult?.data})`,
       );
     } else if (
+      !axiosResult ||
       !axiosResult?.data ||
       Object.values(<EsoStatus | EsoStatus[]>axiosResult.data).length === 0
     ) {
@@ -176,7 +177,7 @@ export class EsoStatusConnector {
         `Empty response ${axiosResult?.status} (${axiosResult?.data})`,
       );
     } else {
-      return axiosResult ? <EsoStatus | EsoStatus[]>axiosResult?.data : [];
+      return <EsoStatus | EsoStatus[]>axiosResult.data;
     }
   }
 }
