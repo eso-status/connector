@@ -160,8 +160,9 @@ export class EsoStatusConnector {
       );
     }
 
+    const urlEnding: string = slug && !Array.isArray(slug) ? `/${slug}` : '';
     const axiosResult: AxiosResponse = await axios.get(
-      `https://api.eso-status.com/v2/service${slug && !Array.isArray(slug) ? `/${slug}` : ''}`,
+      `https://api.eso-status.com/v2/service${urlEnding}`,
     );
 
     if (axiosResult?.status !== 200) {
