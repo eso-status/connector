@@ -1,13 +1,7 @@
-import { AxiosResponse } from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import * as EventEmitter from 'events';
-import { io } from 'socket.io-client';
-import {
-  Slug,
-  EsoStatus,
-  MaintenanceEsoStatus,
-} from '@eso-status/types';
-
-const axios = require('axios');
+import * as io from 'socket.io-client';
+import { Slug, EsoStatus, MaintenanceEsoStatus } from '@eso-status/types';
 
 /**
  * Event declaration
@@ -21,7 +15,10 @@ export declare interface EsoStatusConnector extends EventEmitter {
    *
    * @return EsoStatusConnector
    */
-  on(event: 'maintenancePlanned', listener: (data: MaintenanceEsoStatus) => void): this;
+  on(
+    event: 'maintenancePlanned',
+    listener: (data: MaintenanceEsoStatus) => void,
+  ): this;
   /**
    * Event emitted when maintenance is removed
    *
@@ -65,16 +62,6 @@ export declare interface EsoStatusConnector extends EventEmitter {
  */
 export class EsoStatusConnector {
   /**
-   * Eso status api URI
-   *
-   * @private
-   * @static
-   *
-   * @return string Eso status api URI
-   */
-  private static apiUri = 'https://api.eso-status.com';
-
-  /**
    * Methode used to get eso-status emitter
    *
    * @public
@@ -90,8 +77,9 @@ export class EsoStatusConnector {
     let socketFirstConnect: boolean = false;
 
     // Connect to eso-status.com io server
-    io(`${EsoStatusConnector.apiUri}/`, {
-      path: '/v1/socket',
+    io.connect('https://api.eso-status.com', {
+      secure: true,
+      rejectUnauthorized: false,
       transports: ['websocket'],
     })
       .on('maintenancePlanned', (data: MaintenanceEsoStatus): void => {
@@ -117,28 +105,80 @@ export class EsoStatusConnector {
   }
 
   /**
-   * Methode to use to fetch eso-status.com
+   * Methode to use to fetch eso-status.com from single slug
    *
    * @public
    * @static
    * @async
    *
    * @param slug  Slug or slugs list
+   * @return Promise<EsoStatus> Eso status item
+   */
+  public static async get(slug: Slug): Promise<EsoStatus>;
+
+  /**
+   * Methode to use to fetch eso-status.com from multiple slug
+   *
+   * @public
+   * @static
+   * @async
+   *
+   * @param slug Slug[] or slugs list
    * @return Promise<EsoStatus[]> Eso status item list
    */
-  public static async get(slug?: Slug|Slug[]): Promise<EsoStatus[]> {
-    // Create URL
-    const url: string = `${EsoStatusConnector.apiUri}/v1/status${slug ? (typeof slug === 'string' ? `/${slug}` : `/${slug?.join('-')}`) : ''}`;
+  public static async get(slug: Slug[]): Promise<EsoStatus[]>;
 
-    // Execute axios request
-    const response: AxiosResponse = await axios.get(url);
+  /**
+   * Methode to use to fetch all services eso-status.com
+   *
+   * @public
+   * @static
+   * @async
+   *
+   * @return Promise<EsoStatus[]> Eso status item list
+   */
+  public static async get(): Promise<EsoStatus[]>;
 
-    if (response?.status !== 200) {
-      throw new Error(`Bad response ${response?.status} (${response?.data})`);
-    } else if (!response?.data) {
-      throw new Error(`Empty response ${response?.status} (${response?.data})`);
+  /**
+   * Methode to use to fetch eso-status.com from multiple slug
+   *
+   * @public
+   * @static
+   * @async
+   *
+   * @param slug Slug|Slug[]|null or slugs list
+   * @return Promise<EsoStatus[]> Eso status item list
+   */
+  public static async get(
+    slug?: Slug | Slug[],
+  ): Promise<EsoStatus | EsoStatus[]> {
+    if (Array.isArray(slug)) {
+      return Promise.all(
+        slug.map(
+          (item: Slug): Promise<EsoStatus> => EsoStatusConnector.get(item),
+        ),
+      );
+    }
+
+    const urlEnding: string = slug && !Array.isArray(slug) ? `/${slug}` : '';
+    const axiosResult: AxiosResponse = await axios.get(
+      `https://api.eso-status.com/v2/service${urlEnding}`,
+    );
+
+    if (axiosResult?.status !== 200) {
+      throw new Error(
+        `Bad response ${axiosResult?.status} (${axiosResult?.data})`,
+      );
+    } else if (
+      !axiosResult ||
+      !axiosResult?.data ||
+      Object.values(<EsoStatus | EsoStatus[]>axiosResult.data).length === 0
+    ) {
+      throw new Error(
+        `Empty response ${axiosResult?.status} (${axiosResult?.data})`,
+      );
     } else {
-      return (response ? response?.data : []);
+      return <EsoStatus | EsoStatus[]>axiosResult.data;
     }
   }
 }
