@@ -26,13 +26,22 @@ jobs:
           VERSION=`node -p "require('./package.json').version"`
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
+      - name: Check if tag exist
+        id: tag_exist
+        run: |
+          exist=`git tag -l ${{ steps.get_version.outputs.version }} | wc -l`
+          echo "exist=$exist" >> $GITHUB_OUTPUT
+
       - name: Install dependencies
+        if: steps.tag_exist.outputs.exist == 0
         run: npm ci
 
       - name: Build the code
+        if: steps.tag_exist.outputs.exist == 0
         run: npm run build
 
       - name: Publish to NPM
+        if: steps.tag_exist.outputs.exist == 0
         uses: JS-DevTools/npm-publish@v3.1.1
         with:
           token: ${{ secrets.NPM_TOKEN }}
@@ -51,6 +60,7 @@ jobs:
           git push --tags
 
       - name: Create release
+        if: steps.tag_exist.outputs.exist == 0
         env:
           GH_TOKEN: ${{ secrets.CUSTOM_TOKEN }}
         run: |
