@@ -1,21 +1,16 @@
 name: CD
 
-#on:
-#  pull_request:
-#    types: [closed]
-#    branches:
-#      - "main"
-
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
-      - "*"
-      -
+      - "main"
+
 jobs:
   cd:
     name: Publish to NPM
     runs-on: ubuntu-latest
-#    if: contains(github.head_ref, 'release/')
+    if: contains(github.head_ref, 'release/')
     timeout-minutes: 10
     steps:
       - name: Checkout source
@@ -59,4 +54,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CUSTOM_TOKEN }}
         run: |
-          gh release create ${{ steps.get_version.outputs.version }} --title "Release ${{ steps.get_version.outputs.version }}" --generate-notes --latest
+          gh release create ${{ steps.get_version.outputs.version }} --title "${{ steps.get_version.outputs.version }}" --generate-notes --latest
