@@ -38,6 +38,15 @@ export declare interface EsoStatusConnector extends EventEmitter {
    */
   on(event: 'statusUpdate', listener: (data: EsoStatus) => void): this;
   /**
+   * Event emitted when socket is connected
+   *
+   * @param event string Event name
+   * @param listener ()=>void Event listener
+   *
+   * @return EsoStatusConnector
+   */
+  on(event: 'connected', listener: () => void): this;
+  /**
    * Event emitted when socket is disconnected
    *
    * @param event string Event name
@@ -97,6 +106,7 @@ export class EsoStatusConnector {
       .on('connect', (): void => {
         if (!socketFirstConnect) {
           socketFirstConnect = true;
+          emitter.emit('connected');
         } else {
           emitter.emit('reconnect');
         }
