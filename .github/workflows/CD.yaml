@@ -8,7 +8,7 @@ on:
 
 jobs:
   cd:
-    name: Publish to NPM
+    name: CD
     runs-on: ubuntu-latest
     if: contains(github.head_ref, 'release/')
     timeout-minutes: 10
