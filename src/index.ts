@@ -86,14 +86,10 @@ export class EsoStatusConnector {
     let socketFirstConnect: boolean = false;
 
     // Connect to eso-status.com io server
-    io.connect('https://api.eso-status.com', {
+    io.connect('https://api.eso-status.local:4434', {
       secure: true,
       rejectUnauthorized: false,
       transports: ['websocket'],
-      randomizationFactor: 0.01,
-      timeout: 3600000,
-      reconnectionDelayMax: 3600000,
-      reconnectionDelay: 1,
     })
       .on('maintenancePlanned', (data: MaintenanceEsoStatus): void => {
         emitter.emit('maintenancePlanned', data);
