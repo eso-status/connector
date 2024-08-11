@@ -86,7 +86,7 @@ export class EsoStatusConnector {
     let socketFirstConnect: boolean = false;
 
     // Connect to eso-status.com io server
-    io.connect('https://api.eso-status.local:4434', {
+    io.connect('https://api.eso-status.com', {
       secure: true,
       rejectUnauthorized: false,
       transports: ['websocket'],
