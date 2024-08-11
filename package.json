@@ -1,6 +1,6 @@
 {
   "name": "@eso-status/connector",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Connector for eso-status api",
   "main": "index.js",
   "types": "index.d.ts",
