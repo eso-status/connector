@@ -38,6 +38,15 @@ export declare interface EsoStatusConnector extends EventEmitter {
    */
   on(event: 'statusUpdate', listener: (data: EsoStatus) => void): this;
   /**
+   * Event emitted when socket is connected
+   *
+   * @param event string Event name
+   * @param listener ()=>void Event listener
+   *
+   * @return EsoStatusConnector
+   */
+  on(event: 'connected', listener: () => void): this;
+  /**
    * Event emitted when socket is disconnected
    *
    * @param event string Event name
@@ -81,6 +90,10 @@ export class EsoStatusConnector {
       secure: true,
       rejectUnauthorized: false,
       transports: ['websocket'],
+      randomizationFactor: 0.01,
+      timeout: 3600000,
+      reconnectionDelayMax: 3600000,
+      reconnectionDelay: 1,
     })
       .on('maintenancePlanned', (data: MaintenanceEsoStatus): void => {
         emitter.emit('maintenancePlanned', data);
@@ -97,6 +110,7 @@ export class EsoStatusConnector {
       .on('connect', (): void => {
         if (!socketFirstConnect) {
           socketFirstConnect = true;
+          emitter.emit('connected');
         } else {
           emitter.emit('reconnect');
         }
