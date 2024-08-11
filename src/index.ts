@@ -81,6 +81,10 @@ export class EsoStatusConnector {
       secure: true,
       rejectUnauthorized: false,
       transports: ['websocket'],
+      randomizationFactor: 0.01,
+      timeout: 3600000,
+      reconnectionDelayMax: 3600000,
+      reconnectionDelay: 1,
     })
       .on('maintenancePlanned', (data: MaintenanceEsoStatus): void => {
         emitter.emit('maintenancePlanned', data);
