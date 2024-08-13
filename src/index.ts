@@ -2,6 +2,8 @@ import axios, { AxiosResponse } from 'axios';
 import * as EventEmitter from 'events';
 import * as io from 'socket.io-client';
 import { Slug, EsoStatus, MaintenanceEsoStatus } from '@eso-status/types';
+import { Socket } from 'socket.io-client';
+import { clearTimeout } from 'node:timers';
 
 /**
  * Event declaration
@@ -83,14 +85,33 @@ export class EsoStatusConnector {
     const emitter: EsoStatusConnector = new EventEmitter();
 
     // Create first connect status
-    let socketFirstConnect: boolean = false;
+    let disconnectedEventSent: boolean = false;
+
+    // Declare timeout
+    let pingTimeout: NodeJS.Timeout;
+
+    // Declare socket
+    let socket: Socket;
+
+    // Define timeout action
+    const resetTimeOut = (now: boolean = false): void => {
+      clearTimeout(pingTimeout);
+      pingTimeout = setTimeout(
+        (): void => {
+          socket.disconnect();
+          socket.connect();
+        },
+        !now ? 10000 : 1,
+      );
+    };
 
     // Connect to eso-status.com io server
-    io.connect('https://api.eso-status.com', {
-      secure: true,
-      rejectUnauthorized: false,
-      transports: ['websocket'],
-    })
+    socket = io
+      .connect('https://api.eso-status.com', {
+        secure: true,
+        rejectUnauthorized: false,
+        transports: ['websocket'],
+      })
       .on('maintenancePlanned', (data: MaintenanceEsoStatus): void => {
         emitter.emit('maintenancePlanned', data);
       })
@@ -101,16 +122,24 @@ export class EsoStatusConnector {
         emitter.emit('statusUpdate', data);
       })
       .on('disconnect', (): void => {
-        emitter.emit('disconnect');
+        if (!disconnectedEventSent) {
+          disconnectedEventSent = true;
+          emitter.emit('disconnect');
+        }
       })
       .on('connect', (): void => {
-        if (!socketFirstConnect) {
-          socketFirstConnect = true;
+        resetTimeOut();
+        if (!disconnectedEventSent) {
           emitter.emit('connected');
         } else {
           emitter.emit('reconnect');
         }
+      })
+      .on('ping', (): void => {
+        resetTimeOut();
       });
+
+    resetTimeOut(true);
     return emitter;
   }
 

@@ -317,5 +317,73 @@ describe('should index.ts works', () => {
     });
 
     expect(true).toStrictEqual(true);
-  });
+  }, 10000);
+
+  it('should disconnect without ping event', async (): Promise<void> => {
+    await new Promise<void>((resolve): void => {
+      const localServerSocket: Server = new Server(3001);
+      const localClientSocket: Socket = io.io('ws://localhost:3001', {
+        transports: ['websocket'],
+      });
+
+      localClientSocket.on('connect', (): void => {
+        jest
+          .spyOn(io, 'connect')
+          .mockImplementation((): Socket => localClientSocket);
+
+        let calledNb: number = 0;
+
+        EsoStatusConnector.listen().on('disconnect', (): void => {
+          calledNb += 1;
+        });
+
+        setTimeout((): void => {
+          if (calledNb !== 0) {
+            resolve();
+            localServerSocket.close();
+            localClientSocket.close();
+            jest.restoreAllMocks();
+          }
+        }, 20000);
+      });
+    });
+
+    expect(true).toStrictEqual(true);
+  }, 30000);
+
+  it('should stay alive with ping event', async (): Promise<void> => {
+    await new Promise<void>((resolve): void => {
+      const localServerSocket: Server = new Server(3002);
+      const localClientSocket: Socket = io.io('ws://localhost:3002', {
+        transports: ['websocket'],
+      });
+
+      localClientSocket.on('connect', (): void => {
+        jest
+          .spyOn(io, 'connect')
+          .mockImplementation((): Socket => localClientSocket);
+
+        let calledNb: number = 0;
+
+        EsoStatusConnector.listen().on('disconnect', (): void => {
+          calledNb += 1;
+        });
+
+        setInterval((): void => {
+          localServerSocket.emit('ping');
+        }, 1000);
+
+        setTimeout((): void => {
+          if (calledNb === 0) {
+            resolve();
+            localServerSocket.close();
+            localClientSocket.close();
+            jest.restoreAllMocks();
+          }
+        }, 20000);
+      });
+    });
+
+    expect(true).toStrictEqual(true);
+  }, 30000);
 });
