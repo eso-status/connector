@@ -11,9 +11,9 @@
     "build": "rm -f index.js && rm -f index.d.ts && tsc --project tsconfig.build.json",
     "dev": "npm run build && node .",
     "watch": "nodemon --exec npm run dev",
-    "test": "jest --runInBand --setupFiles",
+    "test": "jest --runInBand --setupFiles --forceExit",
     "test:watch": "jest --runInBand --watch --setupFiles",
-    "test:cov": "jest --runInBand --coverage --setupFiles"
+    "test:cov": "jest --runInBand --coverage --setupFiles --forceExit"
   },
   "files": [
     ".npmrc",

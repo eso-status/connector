@@ -339,10 +339,10 @@ describe('should index.ts works', () => {
 
         setTimeout((): void => {
           if (calledNb !== 0) {
-            resolve();
             localServerSocket.close();
             localClientSocket.close();
             jest.restoreAllMocks();
+            resolve();
           }
         }, 20000);
       });
@@ -375,10 +375,10 @@ describe('should index.ts works', () => {
 
         setTimeout((): void => {
           if (calledNb === 0) {
-            resolve();
             localServerSocket.close();
             localClientSocket.close();
             jest.restoreAllMocks();
+            resolve();
           }
         }, 20000);
       });
