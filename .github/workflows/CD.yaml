@@ -18,7 +18,7 @@ jobs:
 
       - uses: actions/setup-node@v4.0.3
         with:
-          node-version: 20.16.0
+          node-version: 20.17.0
 
       - name: Get version
         id: get_version
