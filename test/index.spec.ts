@@ -1,4 +1,4 @@
-import { EsoStatus, MaintenanceEsoStatus, Slug } from '@eso-status/types';
+import { EsoStatus, EsoStatusMaintenance, Slug } from '@eso-status/types';
 import { AxiosResponse } from 'axios';
 
 import { Server } from 'socket.io';
@@ -32,16 +32,18 @@ describe('should index.ts works', () => {
     type: 'server',
     support: 'xbox',
     zone: 'na',
-    raw: {
-      sources: ['https://live-services.elderscrollsonline.com/status/realms'],
-      raw: ['The Elder Scrolls Online (XBox - US)', 'UP'],
+    rawData: {
+      source: 'https://live-services.elderscrollsonline.com/status/realms',
+      raw: 'The Elder Scrolls Online (XBox - US) UP',
       rawSlug: 'The Elder Scrolls Online (XBox - US)',
       rawStatus: 'UP',
-      slugs: ['server_xbox_na'],
+      slug: 'server_xbox_na',
+      type: 'server',
       support: 'xbox',
       zone: 'na',
       status: 'up',
     },
+    statusSince: moment(0),
   };
   const serverXboxEu: EsoStatus = {
     slug: 'server_xbox_eu',
@@ -49,23 +51,27 @@ describe('should index.ts works', () => {
     type: 'server',
     support: 'xbox',
     zone: 'eu',
-    raw: {
-      sources: ['https://live-services.elderscrollsonline.com/status/realms'],
-      raw: ['The Elder Scrolls Online (XBox - EU)', 'UP'],
+    rawData: {
+      source: 'https://live-services.elderscrollsonline.com/status/realms',
+      raw: 'The Elder Scrolls Online (XBox - EU) UP',
       rawSlug: 'The Elder Scrolls Online (XBox - EU)',
       rawStatus: 'UP',
-      slugs: ['server_xbox_eu'],
+      slug: 'server_xbox_eu',
+      type: 'server',
       support: 'xbox',
       zone: 'eu',
       status: 'up',
     },
+    statusSince: moment(0),
   };
 
   // eslint-disable-next-line @typescript-eslint/require-await
   beforeEach(async (): Promise<void> => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     get.mockImplementation((url): Promise<any> => {
-      if (url === `https://api.eso-status.com/v2/service/server_xbox_na`) {
+      if (
+        url === `https://preprod.api.eso-status.com/v3/service/server_xbox_na`
+      ) {
         return Promise.resolve({
           data: serverXboxNa,
           status: 200,
@@ -73,7 +79,9 @@ describe('should index.ts works', () => {
         });
       }
 
-      if (url === `https://api.eso-status.com/v2/service/server_xbox_eu`) {
+      if (
+        url === `https://preprod.api.eso-status.com/v3/service/server_xbox_eu`
+      ) {
         return Promise.resolve({
           data: serverXboxEu,
           status: 200,
@@ -166,53 +174,68 @@ describe('should index.ts works', () => {
       clientSocket.on('connect', (): void => {
         mockClient();
 
-        const maintenanceEsoStatus: MaintenanceEsoStatus = {
-          raw: {
-            sources: [
-              'https://forums.elderscrollsonline.com/',
-              'https://forums.elderscrollsonline.com/en/categories/pts',
-            ],
-            raw: [
-              '· EU megaservers for maintenance – August 7, 8:00 UTC (4:00AM EDT) - 16:00 UTC (12:00PM EDT)',
-            ],
-            slugs: ['server_xbox_eu'],
-            rawDate:
-              'August 7, 8:00 UTC (4:00AM EDT) - 16:00 UTC (12:00PM EDT)',
-            dates: [
-              moment()
-                .utc()
-                .set('years', 2024)
-                .set('months', 8)
-                .set('date', 7)
-                .set('hours', 8)
-                .set('minutes', 0)
-                .set('seconds', 0)
-                .set('milliseconds', 0)
-                .utcOffset(0),
-              moment()
-                .utc()
-                .set('years', 2024)
-                .set('months', 8)
-                .set('date', 7)
-                .set('hours', 16)
-                .set('minutes', 0)
-                .set('seconds', 0)
-                .set('milliseconds', 0)
-                .utcOffset(0),
-            ],
-            type: 'server',
-            support: 'xbox',
-            zone: 'eu',
-            status: 'planned',
-          },
-          slug: 'server_xbox_eu',
-          beginnerAt: '2024-08-07T08:00:00.000Z',
-          endingAt: '2024-08-07T16:00:00.000Z',
+        const maintenanceEsoStatus: EsoStatusMaintenance = {
+          rawDataList: [
+            {
+              source: 'https://forums.elderscrollsonline.com/',
+              raw: '· EU megaservers for maintenance – August 7, 8:00 UTC (4:00AM EDT) - 16:00 UTC (12:00PM EDT)',
+              slug: 'server_xbox_eu',
+              rawDate:
+                'August 7, 8:00 UTC (4:00AM EDT) - 16:00 UTC (12:00PM EDT)',
+              dates: [
+                moment()
+                  .utc()
+                  .set('years', 2024)
+                  .set('months', 8)
+                  .set('date', 7)
+                  .set('hours', 8)
+                  .set('minutes', 0)
+                  .set('seconds', 0)
+                  .set('milliseconds', 0)
+                  .utcOffset(0),
+                moment()
+                  .utc()
+                  .set('years', 2024)
+                  .set('months', 8)
+                  .set('date', 7)
+                  .set('hours', 16)
+                  .set('minutes', 0)
+                  .set('seconds', 0)
+                  .set('milliseconds', 0)
+                  .utcOffset(0),
+              ],
+              type: 'server',
+              support: 'xbox',
+              zone: 'eu',
+              status: 'planned',
+              rawSlug: '',
+            },
+          ],
+          beginnerAt: moment()
+            .utc()
+            .set('years', 2024)
+            .set('months', 8 - 1)
+            .set('date', 7)
+            .set('hours', 8)
+            .set('minutes', 0)
+            .set('seconds', 0)
+            .set('milliseconds', 0)
+            .utcOffset(0),
+          endingAt: moment()
+            .utc()
+            .set('years', 2024)
+            .set('months', 8 - 1)
+            .set('date', 7)
+            .set('hours', 16)
+            .set('minutes', 0)
+            .set('seconds', 0)
+            .set('milliseconds', 0)
+            .utcOffset(0),
         };
 
         EsoStatusConnector.listen().on(
           'maintenancePlanned',
-          (data: MaintenanceEsoStatus): void => {
+          (data: EsoStatusMaintenance): void => {
             if (JSON.stringify(maintenanceEsoStatus) === JSON.stringify(data)) {
               // eslint-disable-next-line jest/no-conditional-expect
               expect(true).toStrictEqual(true);
@@ -260,18 +283,19 @@ describe('should index.ts works', () => {
           type: 'server',
           support: 'xbox',
           zone: 'na',
-          raw: {
-            sources: [
+          rawData: {
+            source:
               'https://live-services.elderscrollsonline.com/status/realms',
-            ],
-            raw: ['The Elder Scrolls Online (XBox - US)', 'UP'],
+            raw: 'The Elder Scrolls Online (XBox - US) UP',
             rawSlug: 'The Elder Scrolls Online (XBox - US)',
             rawStatus: 'UP',
-            slugs: ['server_xbox_na'],
+            slug: 'server_xbox_na',
+            type: 'server',
             support: 'xbox',
             zone: 'na',
             status: 'up',
           },
+          statusSince: moment(0),
         };
 
         EsoStatusConnector.listen().on(
