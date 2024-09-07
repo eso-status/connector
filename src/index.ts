@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 import * as EventEmitter from 'events';
 import * as io from 'socket.io-client';
-import { Slug, EsoStatus, MaintenanceEsoStatus } from '@eso-status/types';
+import { Slug, EsoStatus, EsoStatusMaintenance } from '@eso-status/types';
 
 /**
  * Event declaration
@@ -11,13 +11,13 @@ export declare interface EsoStatusConnector extends EventEmitter {
    * Event emitted when maintenance is planned
    *
    * @param event string Event name
-   * @param listener (data:MaintenanceEsoStatus)=>void Event listener
+   * @param listener (data:EsoStatusMaintenance)=>void Event listener
    *
    * @return EsoStatusConnector
    */
   on(
     event: 'maintenancePlanned',
-    listener: (data: MaintenanceEsoStatus) => void,
+    listener: (data: EsoStatusMaintenance) => void,
   ): this;
   /**
    * Event emitted when maintenance is removed
@@ -86,12 +86,12 @@ export class EsoStatusConnector {
     let socketFirstConnect: boolean = false;
 
     // Connect to eso-status.com io server
-    io.connect('https://api.eso-status.com', {
+    io.connect('https://preprod.api.eso-status.com', {
       secure: true,
       rejectUnauthorized: false,
       transports: ['websocket'],
     })
-      .on('maintenancePlanned', (data: MaintenanceEsoStatus): void => {
+      .on('maintenancePlanned', (data: EsoStatusMaintenance): void => {
         emitter.emit('maintenancePlanned', data);
       })
       .on('maintenanceRemoved', (data: Slug): void => {
@@ -172,7 +172,7 @@ export class EsoStatusConnector {
 
     const urlEnding: string = slug && !Array.isArray(slug) ? `/${slug}` : '';
     const axiosResult: AxiosResponse = await axios.get(
-      `https://api.eso-status.com/v2/service${urlEnding}`,
+      `https://preprod.api.eso-status.com/v3/service${urlEnding}`,
     );
 
     if (axiosResult?.status !== 200) {
