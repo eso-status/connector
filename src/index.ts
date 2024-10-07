@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 import * as EventEmitter from 'events';
 import * as io from 'socket.io-client';
-import { Slug, EsoStatus, EsoStatusMaintenance } from '@eso-status/types';
+import EsoStatus, { Slug, EsoStatusMaintenance } from '@eso-status/types';
 
 /**
  * Event declaration

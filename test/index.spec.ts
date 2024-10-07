@@ -1,9 +1,7 @@
-import { EsoStatus, EsoStatusMaintenance, Slug } from '@eso-status/types';
+import EsoStatus, { EsoStatusMaintenance, Slug } from '@eso-status/types';
 import { AxiosResponse } from 'axios';
 
 import { Server } from 'socket.io';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import * as moment from 'moment/moment';
 
 import { Socket } from 'socket.io-client';
 import * as io from 'socket.io-client';
@@ -43,7 +41,7 @@ describe('should index.ts works', () => {
       zone: 'na',
       status: 'up',
     },
-    statusSince: moment(0),
+    statusSince: '1970-01-01T00:00:00.000Z',
   };
   const serverXboxEu: EsoStatus = {
     slug: 'server_xbox_eu',
@@ -62,7 +60,7 @@ describe('should index.ts works', () => {
       zone: 'eu',
       status: 'up',
     },
-    statusSince: moment(0),
+    statusSince: '1970-01-01T00:00:00.000Z',
   };
 
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -104,11 +102,7 @@ describe('should index.ts works', () => {
 
   afterEach(async (): Promise<void> => {
     clientSocket.close();
-    await new Promise<void>((resolve): void => {
-      serverSocket.close((): void => {
-        resolve();
-      });
-    });
+    await serverSocket.close();
   });
 
   it.each([[serverXboxNa], [serverXboxEu]])(
@@ -182,28 +176,7 @@ describe('should index.ts works', () => {
               slug: 'server_xbox_eu',
               rawDate:
                 'August 7, 8:00 UTC (4:00AM EDT) - 16:00 UTC (12:00PM EDT)',
-              dates: [
-                moment()
-                  .utc()
-                  .set('years', 2024)
-                  .set('months', 8)
-                  .set('date', 7)
-                  .set('hours', 8)
-                  .set('minutes', 0)
-                  .set('seconds', 0)
-                  .set('milliseconds', 0)
-                  .utcOffset(0),
-                moment()
-                  .utc()
-                  .set('years', 2024)
-                  .set('months', 8)
-                  .set('date', 7)
-                  .set('hours', 16)
-                  .set('minutes', 0)
-                  .set('seconds', 0)
-                  .set('milliseconds', 0)
-                  .utcOffset(0),
-              ],
+              dates: ['2024-08-07T08:00:00.000Z', '2024-08-07T16:00:00.000Z'],
               type: 'server',
               support: 'xbox',
               zone: 'eu',
@@ -211,26 +184,9 @@ describe('should index.ts works', () => {
               rawSlug: '',
             },
           ],
-          beginnerAt: moment()
-            .utc()
-            .set('years', 2024)
-            .set('months', 8 - 1)
-            .set('date', 7)
-            .set('hours', 8)
-            .set('minutes', 0)
-            .set('seconds', 0)
-            .set('milliseconds', 0)
-            .utcOffset(0),
-          endingAt: moment()
-            .utc()
-            .set('years', 2024)
-            .set('months', 8 - 1)
-            .set('date', 7)
-            .set('hours', 16)
-            .set('minutes', 0)
-            .set('seconds', 0)
-            .set('milliseconds', 0)
-            .utcOffset(0),
+          beginnerAt: '2024-08-07T08:00:00.000Z',
+          endingAt: '2024-08-07T16:00:00.000Z',
+          plannedSince: '1970-01-01T00:00:00.000Z',
         };
 
         EsoStatusConnector.listen().on(
@@ -295,7 +251,7 @@ describe('should index.ts works', () => {
             zone: 'na',
             status: 'up',
           },
-          statusSince: moment(0),
+          statusSince: '1970-01-01T00:00:00.000Z',
         };
 
         EsoStatusConnector.listen().on(
@@ -316,12 +272,12 @@ describe('should index.ts works', () => {
 
   it('should disconnect event received', async (): Promise<void> => {
     await new Promise<void>((resolve): void => {
-      clientSocket.on('connect', (): void => {
+      clientSocket.on('connect', async (): Promise<void> => {
         mockClient();
 
         EsoStatusConnector.listen().on('disconnect', resolve);
 
-        serverSocket.close();
+        await serverSocket.close();
       });
     });
 
@@ -330,12 +286,12 @@ describe('should index.ts works', () => {
 
   it('should reconnect event received', async (): Promise<void> => {
     await new Promise<void>((resolve): void => {
-      clientSocket.on('connect', (): void => {
+      clientSocket.on('connect', async (): Promise<void> => {
         mockClient();
 
         EsoStatusConnector.listen().on('reconnect', resolve);
 
-        serverSocket.close();
+        await serverSocket.close();
         serverSocket = new Server(3000);
       });
     });
