@@ -86,7 +86,7 @@ export class EsoStatusConnector {
     let socketFirstConnect: boolean = false;
 
     // Connect to eso-status.com io server
-    io.connect('https://preprod.api.eso-status.com', {
+    io.connect('https://api.eso-status.com', {
       secure: true,
       rejectUnauthorized: false,
       transports: ['websocket'],
@@ -172,7 +172,7 @@ export class EsoStatusConnector {
 
     const urlEnding: string = slug && !Array.isArray(slug) ? `/${slug}` : '';
     const axiosResult: AxiosResponse = await axios.get(
-      `https://preprod.api.eso-status.com/v3/service${urlEnding}`,
+      `https://api.eso-status.com/v3/service${urlEnding}`,
     );
 
     if (axiosResult?.status !== 200) {
