@@ -67,7 +67,10 @@ describe('should index.ts works', () => {
   beforeEach(async (): Promise<void> => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     get.mockImplementation((url): Promise<any> => {
-      if (url === `https://api.eso-status.com/v3/service/server_xbox_na`) {
+      if (
+        url ===
+        `https://preprod.api.eso-status.com:4433/v3/service/server_xbox_na`
+      ) {
         return Promise.resolve({
           data: serverXboxNa,
           status: 200,
@@ -75,7 +78,10 @@ describe('should index.ts works', () => {
         });
       }
 
-      if (url === `https://api.eso-status.com/v3/service/server_xbox_eu`) {
+      if (
+        url ===
+        `https://preprod.api.eso-status.com:4433/v3/service/server_xbox_eu`
+      ) {
         return Promise.resolve({
           data: serverXboxEu,
           status: 200,
