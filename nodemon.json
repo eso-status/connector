@@ -1,11 +1,12 @@
 {
   "ignore": [
-    "node_modules/*",
+    "node_modules",
     "index.js",
-    "index.d.ts"
+    "index.d.ts",
+    "index.js.map",
+    "coverage"
   ],
-  "watch": [
-    "src/*"
-  ],
-  "ext": "ts"
+  "watch": ["src"],
+  "ext": "ts",
+  "exec": "npm run dev"
 }

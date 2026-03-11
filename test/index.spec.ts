@@ -1,14 +1,12 @@
 import EsoStatus, { EsoStatusMaintenance, Slug } from '@eso-status/types';
-import { AxiosResponse } from 'axios';
+import axios from 'axios';
 
 import { Server } from 'socket.io';
 
 import { Socket } from 'socket.io-client';
 import * as io from 'socket.io-client';
 import { EsoStatusConnector } from '../src';
-
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-var-requires
-const axios = require('axios');
+import SpyInstance = jest.SpyInstance;
 
 let serverSocket: Server;
 let clientSocket: Socket;
@@ -18,11 +16,7 @@ const mockClient = (): void => {
 };
 
 describe('should index.ts works', () => {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  const get: jest.SpyInstance<Promise<AxiosResponse>> = jest.spyOn(
-    axios,
-    'get',
-  );
+  const get: SpyInstance<Promise<unknown>> = jest.spyOn(axios, 'get');
 
   const serverXboxNa: EsoStatus = {
     slug: 'server_xbox_na',
@@ -63,13 +57,10 @@ describe('should index.ts works', () => {
     statusSince: '1970-01-01T00:00:00.000Z',
   };
 
-  // eslint-disable-next-line @typescript-eslint/require-await
-  beforeEach(async (): Promise<void> => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    get.mockImplementation((url): Promise<any> => {
+  beforeEach((): void => {
+    get.mockImplementation((url): Promise<unknown> => {
       if (
-        url ===
-        `https://preprod.api.eso-status.com:4433/v3/service/server_xbox_na`
+        url === `https://preprod.api.eso-status.com/v3/service/server_xbox_na`
       ) {
         return Promise.resolve({
           data: serverXboxNa,
@@ -79,8 +70,7 @@ describe('should index.ts works', () => {
       }
 
       if (
-        url ===
-        `https://preprod.api.eso-status.com:4433/v3/service/server_xbox_eu`
+        url === `https://preprod.api.eso-status.com/v3/service/server_xbox_eu`
       ) {
         return Promise.resolve({
           data: serverXboxEu,
@@ -130,8 +120,7 @@ describe('should index.ts works', () => {
   });
 
   it("should get() when API don't return 200 status", async (): Promise<void> => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    get.mockImplementation((): Promise<any> => {
+    get.mockImplementation((): Promise<unknown> => {
       return Promise.resolve({
         data: {},
         status: 500,
@@ -142,14 +131,12 @@ describe('should index.ts works', () => {
     try {
       await EsoStatusConnector.get();
     } catch (error) {
-      // eslint-disable-next-line jest/no-conditional-expect
       expect(error).toBeInstanceOf(Error);
     }
   });
 
   it("should get() when API don't return data", async (): Promise<void> => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    get.mockImplementation((): Promise<any> => {
+    get.mockImplementation((): Promise<unknown> => {
       return Promise.resolve({
         data: {},
         status: 200,
@@ -160,7 +147,6 @@ describe('should index.ts works', () => {
     try {
       await EsoStatusConnector.get();
     } catch (error) {
-      // eslint-disable-next-line jest/no-conditional-expect
       expect(error).toBeInstanceOf(Error);
     }
   });
@@ -195,8 +181,7 @@ describe('should index.ts works', () => {
           'maintenancePlanned',
           (data: EsoStatusMaintenance): void => {
             if (JSON.stringify(maintenanceEsoStatus) === JSON.stringify(data)) {
-              // eslint-disable-next-line jest/no-conditional-expect
-              expect(true).toStrictEqual(true);
+              expect(true).toBe(true);
               resolve();
             }
           },
@@ -218,8 +203,7 @@ describe('should index.ts works', () => {
           'maintenanceRemoved',
           (data: Slug): void => {
             if (data === maintenanceRemoved) {
-              // eslint-disable-next-line jest/no-conditional-expect
-              expect(true).toStrictEqual(true);
+              expect(true).toBe(true);
               resolve();
             }
           },
@@ -260,8 +244,7 @@ describe('should index.ts works', () => {
           'statusUpdate',
           (data: EsoStatus): void => {
             if (JSON.stringify(data) === JSON.stringify(statusUpdate)) {
-              // eslint-disable-next-line jest/no-conditional-expect
-              expect(true).toStrictEqual(true);
+              expect(true).toBe(true);
               resolve();
             }
           },
@@ -283,7 +266,7 @@ describe('should index.ts works', () => {
       });
     });
 
-    expect(true).toStrictEqual(true);
+    expect(true).toBe(true);
   });
 
   it('should reconnect event received', async (): Promise<void> => {
@@ -298,6 +281,16 @@ describe('should index.ts works', () => {
       });
     });
 
-    expect(true).toStrictEqual(true);
+    expect(true).toBe(true);
+  });
+
+  afterAll(async () => {
+    clientSocket.removeAllListeners();
+    clientSocket.close();
+    serverSocket.removeAllListeners();
+    await serverSocket.close();
+
+    jest.clearAllMocks();
+    jest.resetModules();
   });
 });

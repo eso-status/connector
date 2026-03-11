@@ -6,6 +6,7 @@ import EsoStatus, { Slug, EsoStatusMaintenance } from '@eso-status/types';
 /**
  * Event declaration
  */
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export declare interface EsoStatusConnector extends EventEmitter {
   /**
    * Event emitted when maintenance is planned
@@ -54,6 +55,7 @@ export declare interface EsoStatusConnector extends EventEmitter {
    *
    * @return EsoStatusConnector
    */
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
   on(event: 'disconnect', listener: () => void): this;
   /**
    * Event emitted when socket is reconnected
@@ -63,12 +65,14 @@ export declare interface EsoStatusConnector extends EventEmitter {
    *
    * @return EsoStatusConnector
    */
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
   on(event: 'reconnect', listener: () => void): this;
 }
 
 /**
  * Connector to fetch data from api.eso-status.com
  */
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class,@typescript-eslint/no-unsafe-declaration-merging
 export class EsoStatusConnector {
   /**
    * Methode used to get eso-status emitter
@@ -83,10 +87,10 @@ export class EsoStatusConnector {
     const emitter: EsoStatusConnector = new EventEmitter();
 
     // Create first connect status
-    let socketFirstConnect: boolean = false;
+    let socketFirstConnect = false;
 
     // Connect to eso-status.com io server
-    io.connect('https://preprod.api.eso-status.com:4433', {
+    io.connect('https://preprod.api.eso-status.com', {
       secure: true,
       rejectUnauthorized: false,
       transports: ['websocket'],
@@ -136,6 +140,7 @@ export class EsoStatusConnector {
    * @param slug Slug[] or slugs list
    * @return Promise<EsoStatus[]> Eso status item list
    */
+  // eslint-disable-next-line @typescript-eslint/unified-signatures
   public static async get(slug: Slug[]): Promise<EsoStatus[]>;
 
   /**
@@ -172,23 +177,22 @@ export class EsoStatusConnector {
 
     const urlEnding: string = slug && !Array.isArray(slug) ? `/${slug}` : '';
     const axiosResult: AxiosResponse = await axios.get(
-      `https://preprod.api.eso-status.com:4433/v3/service${urlEnding}`,
+      `https://preprod.api.eso-status.com/v3/service${urlEnding}`,
     );
 
-    if (axiosResult?.status !== 200) {
+    if (axiosResult.status !== 200) {
       throw new Error(
-        `Bad response ${axiosResult?.status} (${axiosResult?.data})`,
+        `Bad response ${String(axiosResult.status)} (${String(axiosResult.data)})`,
       );
     } else if (
-      !axiosResult ||
-      !axiosResult?.data ||
-      Object.values(<EsoStatus | EsoStatus[]>axiosResult.data).length === 0
+      !axiosResult.data ||
+      Object.values(axiosResult.data as EsoStatus | EsoStatus[]).length === 0
     ) {
       throw new Error(
-        `Empty response ${axiosResult?.status} (${axiosResult?.data})`,
+        `Empty response ${String(axiosResult.status)} (${String(axiosResult.data)})`,
       );
     } else {
-      return <EsoStatus | EsoStatus[]>axiosResult.data;
+      return axiosResult.data as EsoStatus | EsoStatus[];
     }
   }
 }

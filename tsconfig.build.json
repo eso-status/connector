@@ -1,4 +1,12 @@
 {
   "extends": "./tsconfig.json",
-  "exclude": ["node_modules", "test", "coverage"]
+  "include": ["src/index.ts"],
+  "exclude": [
+    "node_modules",
+    "test",
+    "index.js.map",
+    "index.js",
+    "index.d.ts",
+    "coverage"
+  ]
 }
