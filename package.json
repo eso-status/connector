@@ -61,8 +61,8 @@
   },
   "dependencies": {
     "@eso-status/types": "1.0.7",
-    "axios": "1.7.5",
-    "socket.io": "4.7.5",
+    "axios": "1.13.5",
+    "socket.io": "4.8.3",
     "socket.io-client": "4.7.5",
     "supertest": "7.0.0"
   },
