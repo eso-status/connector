@@ -1,30 +1,25 @@
 import { EsoStatus, MaintenanceEsoStatus, Slug } from '@eso-status/types';
-import { AxiosResponse } from 'axios';
+import axios, { AxiosResponse } from 'axios';
 
 import { Server } from 'socket.io';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import * as moment from 'moment/moment';
+import moment from 'moment';
 
 import { Socket } from 'socket.io-client';
 import * as io from 'socket.io-client';
 import { EsoStatusConnector } from '../src';
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-var-requires
-const axios = require('axios');
-
 let serverSocket: Server;
 let clientSocket: Socket;
 
-const mockClient = (): void => {
-  jest.spyOn(io, 'connect').mockImplementation((): Socket => clientSocket);
-};
+const mockClient = (): jest.SpiedFunction<typeof io.connect> =>
+  // ⚠️ `import * as io` gives a read-only copy of the module (esModuleInterop): the spy goes on the
+  // module itself, which the source reads at every call.
+  jest
+    .spyOn(jest.requireActual<typeof io>('socket.io-client'), 'connect')
+    .mockImplementation((): Socket => clientSocket);
 
 describe('should index.ts works', () => {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  const get: jest.SpyInstance<Promise<AxiosResponse>> = jest.spyOn(
-    axios,
-    'get',
-  );
+  const get = jest.spyOn(axios, 'get');
 
   const serverXboxNa: EsoStatus = {
     slug: 'server_xbox_na',
@@ -63,8 +58,7 @@ describe('should index.ts works', () => {
 
   // eslint-disable-next-line @typescript-eslint/require-await
   beforeEach(async (): Promise<void> => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    get.mockImplementation((url): Promise<any> => {
+    get.mockImplementation((url: string): Promise<Partial<AxiosResponse>> => {
       if (url === `https://api.eso-status.com/v2/service/server_xbox_na`) {
         return Promise.resolve({
           data: serverXboxNa,
@@ -96,11 +90,7 @@ describe('should index.ts works', () => {
 
   afterEach(async (): Promise<void> => {
     clientSocket.close();
-    await new Promise<void>((resolve): void => {
-      serverSocket.close((): void => {
-        resolve();
-      });
-    });
+    await serverSocket.close();
   });
 
   it.each([[serverXboxNa], [serverXboxEu]])(
@@ -126,8 +116,7 @@ describe('should index.ts works', () => {
   });
 
   it("should get() when API don't return 200 status", async (): Promise<void> => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    get.mockImplementation((): Promise<any> => {
+    get.mockImplementation((): Promise<Partial<AxiosResponse>> => {
       return Promise.resolve({
         data: {},
         status: 500,
@@ -138,14 +127,12 @@ describe('should index.ts works', () => {
     try {
       await EsoStatusConnector.get();
     } catch (error) {
-      // eslint-disable-next-line jest/no-conditional-expect
       expect(error).toBeInstanceOf(Error);
     }
   });
 
   it("should get() when API don't return data", async (): Promise<void> => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    get.mockImplementation((): Promise<any> => {
+    get.mockImplementation((): Promise<Partial<AxiosResponse>> => {
       return Promise.resolve({
         data: {},
         status: 200,
@@ -156,166 +143,176 @@ describe('should index.ts works', () => {
     try {
       await EsoStatusConnector.get();
     } catch (error) {
-      // eslint-disable-next-line jest/no-conditional-expect
       expect(error).toBeInstanceOf(Error);
     }
   });
 
-  it('should maintenancePlanned event received', async (): Promise<void> => {
-    await new Promise<void>((resolve): void => {
-      clientSocket.on('connect', (): void => {
-        mockClient();
+  it('should verify the api certificate', (): void => {
+    const connect = mockClient();
 
-        const maintenanceEsoStatus: MaintenanceEsoStatus = {
-          raw: {
-            sources: [
-              'https://forums.elderscrollsonline.com/',
-              'https://forums.elderscrollsonline.com/en/categories/pts',
-            ],
-            raw: [
-              '· EU megaservers for maintenance – August 7, 8:00 UTC (4:00AM EDT) - 16:00 UTC (12:00PM EDT)',
-            ],
-            slugs: ['server_xbox_eu'],
-            rawDate:
-              'August 7, 8:00 UTC (4:00AM EDT) - 16:00 UTC (12:00PM EDT)',
-            dates: [
-              moment()
-                .utc()
-                .set('years', 2024)
-                .set('months', 8)
-                .set('date', 7)
-                .set('hours', 8)
-                .set('minutes', 0)
-                .set('seconds', 0)
-                .set('milliseconds', 0)
-                .utcOffset(0),
-              moment()
-                .utc()
-                .set('years', 2024)
-                .set('months', 8)
-                .set('date', 7)
-                .set('hours', 16)
-                .set('minutes', 0)
-                .set('seconds', 0)
-                .set('milliseconds', 0)
-                .utcOffset(0),
-            ],
-            type: 'server',
-            support: 'xbox',
-            zone: 'eu',
-            status: 'planned',
-          },
-          slug: 'server_xbox_eu',
-          beginnerAt: '2024-08-07T08:00:00.000Z',
-          endingAt: '2024-08-07T16:00:00.000Z',
-        };
+    EsoStatusConnector.listen();
 
-        EsoStatusConnector.listen().on(
-          'maintenancePlanned',
-          (data: MaintenanceEsoStatus): void => {
-            if (JSON.stringify(maintenanceEsoStatus) === JSON.stringify(data)) {
-              // eslint-disable-next-line jest/no-conditional-expect
-              expect(true).toStrictEqual(true);
-              resolve();
-            }
-          },
-        );
-
-        serverSocket.emit('maintenancePlanned', maintenanceEsoStatus);
-      });
+    expect(connect).toHaveBeenCalledWith('https://api.eso-status.com', {
+      secure: true,
+      transports: ['websocket'],
     });
   });
 
+  it('should maintenancePlanned event received', async (): Promise<void> => {
+    const maintenanceEsoStatus: MaintenanceEsoStatus = {
+      raw: {
+        sources: [
+          'https://forums.elderscrollsonline.com/',
+          'https://forums.elderscrollsonline.com/en/categories/pts',
+        ],
+        raw: [
+          '· EU megaservers for maintenance – August 7, 8:00 UTC (4:00AM EDT) - 16:00 UTC (12:00PM EDT)',
+        ],
+        slugs: ['server_xbox_eu'],
+        rawDate: 'August 7, 8:00 UTC (4:00AM EDT) - 16:00 UTC (12:00PM EDT)',
+        dates: [
+          moment()
+            .utc()
+            .set('years', 2024)
+            .set('months', 8)
+            .set('date', 7)
+            .set('hours', 8)
+            .set('minutes', 0)
+            .set('seconds', 0)
+            .set('milliseconds', 0)
+            .utcOffset(0),
+          moment()
+            .utc()
+            .set('years', 2024)
+            .set('months', 8)
+            .set('date', 7)
+            .set('hours', 16)
+            .set('minutes', 0)
+            .set('seconds', 0)
+            .set('milliseconds', 0)
+            .utcOffset(0),
+        ],
+        type: 'server',
+        support: 'xbox',
+        zone: 'eu',
+        status: 'planned',
+      },
+      slug: 'server_xbox_eu',
+      beginnerAt: '2024-08-07T08:00:00.000Z',
+      endingAt: '2024-08-07T16:00:00.000Z',
+    };
+
+    const received = await new Promise<MaintenanceEsoStatus>(
+      (resolve): void => {
+        clientSocket.on('connect', (): void => {
+          mockClient();
+
+          EsoStatusConnector.listen().on('maintenancePlanned', resolve);
+
+          serverSocket.emit('maintenancePlanned', maintenanceEsoStatus);
+        });
+      },
+    );
+
+    expect(JSON.stringify(received)).toBe(JSON.stringify(maintenanceEsoStatus));
+  });
+
   it('should maintenanceRemoved event received', async (): Promise<void> => {
-    await new Promise<void>((resolve): void => {
+    const maintenanceRemoved: Slug = 'server_xbox_eu';
+
+    const received = await new Promise<Slug>((resolve): void => {
       clientSocket.on('connect', (): void => {
         mockClient();
 
-        const maintenanceRemoved: Slug = 'server_xbox_eu';
-
-        EsoStatusConnector.listen().on(
-          'maintenanceRemoved',
-          (data: Slug): void => {
-            if (data === maintenanceRemoved) {
-              // eslint-disable-next-line jest/no-conditional-expect
-              expect(true).toStrictEqual(true);
-              resolve();
-            }
-          },
-        );
+        EsoStatusConnector.listen().on('maintenanceRemoved', resolve);
 
         serverSocket.emit('maintenanceRemoved', maintenanceRemoved);
       });
     });
+
+    expect(received).toBe(maintenanceRemoved);
   });
 
   it('should statusUpdate event received', async (): Promise<void> => {
-    await new Promise<void>((resolve): void => {
+    const statusUpdate: EsoStatus = {
+      slug: 'server_xbox_na',
+      status: 'up',
+      type: 'server',
+      support: 'xbox',
+      zone: 'na',
+      raw: {
+        sources: ['https://live-services.elderscrollsonline.com/status/realms'],
+        raw: ['The Elder Scrolls Online (XBox - US)', 'UP'],
+        rawSlug: 'The Elder Scrolls Online (XBox - US)',
+        rawStatus: 'UP',
+        slugs: ['server_xbox_na'],
+        support: 'xbox',
+        zone: 'na',
+        status: 'up',
+      },
+    };
+
+    const received = await new Promise<EsoStatus>((resolve): void => {
       clientSocket.on('connect', (): void => {
         mockClient();
 
-        const statusUpdate: EsoStatus = {
-          slug: 'server_xbox_na',
-          status: 'up',
-          type: 'server',
-          support: 'xbox',
-          zone: 'na',
-          raw: {
-            sources: [
-              'https://live-services.elderscrollsonline.com/status/realms',
-            ],
-            raw: ['The Elder Scrolls Online (XBox - US)', 'UP'],
-            rawSlug: 'The Elder Scrolls Online (XBox - US)',
-            rawStatus: 'UP',
-            slugs: ['server_xbox_na'],
-            support: 'xbox',
-            zone: 'na',
-            status: 'up',
-          },
-        };
-
-        EsoStatusConnector.listen().on(
-          'statusUpdate',
-          (data: EsoStatus): void => {
-            if (JSON.stringify(data) === JSON.stringify(statusUpdate)) {
-              // eslint-disable-next-line jest/no-conditional-expect
-              expect(true).toStrictEqual(true);
-              resolve();
-            }
-          },
-        );
+        EsoStatusConnector.listen().on('statusUpdate', resolve);
 
         serverSocket.emit('statusUpdate', statusUpdate);
       });
     });
+
+    expect(JSON.stringify(received)).toBe(JSON.stringify(statusUpdate));
   });
 
   it('should disconnect event received', async (): Promise<void> => {
+    const listener = jest.fn();
+
     await new Promise<void>((resolve): void => {
       clientSocket.on('connect', (): void => {
         mockClient();
 
-        EsoStatusConnector.listen().on('disconnect', resolve);
+        EsoStatusConnector.listen().on('disconnect', (): void => {
+          listener();
+          resolve();
+        });
 
-        serverSocket.close();
+        void serverSocket.close();
       });
     });
 
-    expect(true).toStrictEqual(true);
+    expect(listener).toHaveBeenCalledTimes(1);
   });
 
   it('should reconnect event received', async (): Promise<void> => {
+    // ⚠️ Since socket.io 4.8, close() releases the port only once its promise resolves.
+    const restartServer = async (): Promise<void> => {
+      await serverSocket.close();
+      serverSocket = new Server(3000);
+    };
+    const listener = jest.fn();
+
     await new Promise<void>((resolve): void => {
-      clientSocket.on('connect', (): void => {
-        mockClient();
+      clientSocket.on('connect', resolve);
+    });
+    mockClient();
+    const emitter = EsoStatusConnector.listen();
 
-        EsoStatusConnector.listen().on('reconnect', resolve);
+    const connected = new Promise<void>((resolve): void => {
+      emitter.on('connected', resolve);
+    });
+    await restartServer();
+    await connected;
 
-        serverSocket.close();
-        serverSocket = new Server(3000);
+    const reconnected = new Promise<void>((resolve): void => {
+      emitter.on('reconnect', (): void => {
+        listener();
+        resolve();
       });
     });
+    await restartServer();
+    await reconnected;
 
-    expect(true).toStrictEqual(true);
+    expect(listener).toHaveBeenCalledTimes(1);
   });
 });

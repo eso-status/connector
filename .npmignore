@@ -5,8 +5,7 @@ node_modules
 src
 test
 .editorconfig
-.eslintignore
-.eslintrc.js
+eslint.config.mjs
 .gitignore
 .npmignore
 .npmrc
