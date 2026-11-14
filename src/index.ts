@@ -1,12 +1,12 @@
 import axios, { AxiosResponse } from 'axios';
-import * as EventEmitter from 'events';
+import EventEmitter from 'events';
 import * as io from 'socket.io-client';
 import EsoStatus, { Slug, EsoStatusMaintenance } from '@eso-status/types';
 
 /**
  * Event declaration
  */
-// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging -- the interface types the emitter returned by listen(), which consumers declare as EsoStatusConnector
 export declare interface EsoStatusConnector extends EventEmitter {
   /**
    * Event emitted when maintenance is planned
@@ -39,40 +39,23 @@ export declare interface EsoStatusConnector extends EventEmitter {
    */
   on(event: 'statusUpdate', listener: (data: EsoStatus) => void): this;
   /**
-   * Event emitted when socket is connected
+   * Event emitted when socket is connected, disconnected or reconnected
    *
    * @param event string Event name
    * @param listener ()=>void Event listener
    *
    * @return EsoStatusConnector
    */
-  on(event: 'connected', listener: () => void): this;
-  /**
-   * Event emitted when socket is disconnected
-   *
-   * @param event string Event name
-   * @param listener ()=>void Event listener
-   *
-   * @return EsoStatusConnector
-   */
-  // eslint-disable-next-line @typescript-eslint/unified-signatures
-  on(event: 'disconnect', listener: () => void): this;
-  /**
-   * Event emitted when socket is reconnected
-   *
-   * @param event string Event name
-   * @param listener ()=>void Event listener
-   *
-   * @return EsoStatusConnector
-   */
-  // eslint-disable-next-line @typescript-eslint/unified-signatures
-  on(event: 'reconnect', listener: () => void): this;
+  on(
+    event: 'connected' | 'disconnect' | 'reconnect',
+    listener: () => void,
+  ): this;
 }
 
 /**
  * Connector to fetch data from api.eso-status.com
  */
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class,@typescript-eslint/no-unsafe-declaration-merging
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class, @typescript-eslint/no-unsafe-declaration-merging -- the published API is the static listen() and get() plus the merged emitter type: splitting them would break every consumer
 export class EsoStatusConnector {
   /**
    * Methode used to get eso-status emitter
@@ -92,7 +75,6 @@ export class EsoStatusConnector {
     // Connect to eso-status.com io server
     io.connect('https://preprod.api.eso-status.com', {
       secure: true,
-      rejectUnauthorized: false,
       transports: ['websocket'],
     })
       .on('maintenancePlanned', (data: EsoStatusMaintenance): void => {
@@ -131,7 +113,7 @@ export class EsoStatusConnector {
   public static async get(slug: Slug): Promise<EsoStatus>;
 
   /**
-   * Methode to use to fetch eso-status.com from multiple slug
+   * Methode to use to fetch eso-status.com from multiple slug, or all services without slug
    *
    * @public
    * @static
@@ -140,19 +122,7 @@ export class EsoStatusConnector {
    * @param slug Slug[] or slugs list
    * @return Promise<EsoStatus[]> Eso status item list
    */
-  // eslint-disable-next-line @typescript-eslint/unified-signatures
-  public static async get(slug: Slug[]): Promise<EsoStatus[]>;
-
-  /**
-   * Methode to use to fetch all services eso-status.com
-   *
-   * @public
-   * @static
-   * @async
-   *
-   * @return Promise<EsoStatus[]> Eso status item list
-   */
-  public static async get(): Promise<EsoStatus[]>;
+  public static async get(slug?: Slug[]): Promise<EsoStatus[]>;
 
   /**
    * Methode to use to fetch eso-status.com from multiple slug
@@ -169,8 +139,8 @@ export class EsoStatusConnector {
   ): Promise<EsoStatus | EsoStatus[]> {
     if (Array.isArray(slug)) {
       return Promise.all(
-        slug.map(
-          (item: Slug): Promise<EsoStatus> => EsoStatusConnector.get(item),
+        slug.map((item: Slug): Promise<EsoStatus> =>
+          EsoStatusConnector.get(item),
         ),
       );
     }
